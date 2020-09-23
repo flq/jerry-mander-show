@@ -1,0 +1,26 @@
+@tailwind base;
+
+/* Write your own custom base styles here */
+
+/* Start purging... */
+@tailwind components;
+/* Stop purging. */
+
+/* Write you own custom component styles here */
+body {
+    @apply h-screen;
+}
+
+a {
+    @apply text-blue-700;
+}
+
+a:hover {
+    @apply underline;
+}
+
+/* Start purging... */
+@tailwind utilities;
+/* Stop purging. */
+
+/* Your own custom utilities */
