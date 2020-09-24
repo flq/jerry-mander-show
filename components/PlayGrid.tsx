@@ -1,13 +1,14 @@
 import { CSSProperties, ReactNode, useMemo } from "react";
 import classnames from "classnames";
 import VotingUnit from "./VotingUnit";
+import { validateInitialDistribution } from "infrastructure/Game";
 
 export default function PlayGrid({ distribution, className }: { distribution: string[]; className?: string }) {
   const [isValid, rows, columns, voteUnits] = useMemo(
     (() => {
-      if (distribution[0].length !== distribution.length) return [false];
-      const size = distribution.length;
-      if (distribution.some((row) => row.length !== size)) return [false];
+      const size = validateInitialDistribution(distribution);
+      if (isNaN(size)) return [false];
+      
       const nodes = distribution.flatMap((row, rIndex) =>
         row
           .split("")
