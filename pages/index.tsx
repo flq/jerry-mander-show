@@ -1,7 +1,7 @@
 import React from "react";
 import PlayGrid from "../components/PlayGrid";
 import QAndA from "../components/QAndA";
-import VotingUnit from "../components/VotingUnit";
+import { maps } from "./infrastructure/maps";
 
 export default function Home() {
   return (
@@ -16,9 +16,7 @@ export default function Home() {
           </a>
         </QAndA>
       </ul>
-      <PlayGrid columns={6} rows={6}>
-        { Array(36).fill(1).map((_,index) => <VotingUnit key={index} tribe={index % 2 === 0 ? "BLUE" : "RED" } />) }
-      </PlayGrid>
+      <PlayGrid distribution={maps[0].distribution} />
     </div>
   );
 }
