@@ -1,7 +1,8 @@
 import { CSSProperties, ReactNode, useMemo } from "react";
+import classnames from "classnames";
 import VotingUnit from "./VotingUnit";
 
-export default function PlayGrid({ distribution }: { distribution: string[] }) {
+export default function PlayGrid({ distribution, className }: { distribution: string[]; className?: string }) {
   const [isValid, rows, columns, voteUnits] = useMemo(
     (() => {
       if (distribution[0].length !== distribution.length) return [false];
@@ -24,7 +25,7 @@ export default function PlayGrid({ distribution }: { distribution: string[] }) {
 
   return isValid ? (
     <div
-      className="mx-auto"
+      className={classnames("mx-auto", className)}
       style={
         {
           "--rows": rows,
