@@ -24,11 +24,6 @@ export default function Home() {
               <li>Each district must have the same amount of units</li>
             </ol>
           </ul>
-          Gerrymandering is a hugely popular sport in US-politics, played by Democrats and Trumpians alike. If
-          you want to know more, you can have a look at my website,{" "}
-          <a href="https://realfiction.net/2017/01/18/an-outsiders-guide-to-gerrymandering">
-            An outsider's guide to gerrymandering
-          </a>
         </QAndA>
       </ul>
       <p className="mt-4">Are you ready? Then let's <Link href="/games/0"><a>visit the first game</a></Link></p>
