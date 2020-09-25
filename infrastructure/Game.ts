@@ -1,4 +1,5 @@
 export type Coordinates = [row: number, column: number];
+export type DistrictState = "EMPTY" | "INCOMPLETE" | "INVALID" | "COMPLETE";
 
 interface Unit {
   tribe: "RED" | "BLUE";
@@ -26,8 +27,9 @@ export class Game {
         district: null,
       }))
     );
+
     this.districts = [...Array(this.totalUnitCount / districtSize).keys()].map(
-      () => new District(this.size, districtSize)
+      () => new District(districtSize)
     );
   }
 
@@ -52,54 +54,92 @@ export class Game {
       case "ToggleUnit":
         return this.currentDistrict.toggle(action.coordinates);
       default:
-        return false;
+        return this.currentDistrict.state;
     }
   };
 }
 
 class District {
   private _districtUnits: Map<string, DistrictUnit>;
+  private _state: DistrictState = "EMPTY";
 
-  constructor(private gridSize: number, private districtSize: number) {
+  constructor(private districtSize: number) {
     this._districtUnits = new Map<string, DistrictUnit>();
   }
 
-  get districtBorders(): DistrictUnit[] {
+  get districtUnits(): DistrictUnit[] {
     return Array.from(this._districtUnits.values());
+  }
+
+  get state(): DistrictState {
+    return this._state;
   }
 
   toggle = (coordinates: Coordinates) => {
     const unit = new DistrictUnit(coordinates);
 
     if (this._districtUnits.has(unit.key)) {
-      /*
-        1. remove coords
-        2. start visiting all contained units from one place
-        3. all units must still be reachable
-          -> yes: proceed
-          -> no: roll back
-      */
-      // const markedUnit = this._districtUnits.get(key);
-
-      this._districtUnits.delete(unit.key);
-      return true;
+      return this.handleRemoval(unit);
     } else {
-      if (this._districtUnits.size === 0) {
-        return this.add(unit);
-      }
-      for (const unitKey of unit.validNeighbours()) {
-        if (this._districtUnits.has(unitKey)) {
-          return this.add(unit);
-        }
-      }
-
-      return false;
+      return this.handleAddition(unit);
     }
   };
 
+  private handleAddition(unit: DistrictUnit) {
+    if (this._districtUnits.size === 0) {
+      this.add(unit);
+      return this.updateState("INCOMPLETE");
+    }
+    if (this._districtUnits.size === this.districtSize) {
+      return this.state;
+    }
+
+    this.add(unit);
+
+    const isContiguous = this.isContiguousDistrict();
+
+    if (!isContiguous) return this.updateState("INVALID");
+    else if (this.isFull) return this.updateState("COMPLETE");
+    else return this.updateState("INCOMPLETE");
+  }
+
+  private handleRemoval(unit: DistrictUnit) {
+    
+    this._districtUnits.delete(unit.key);
+
+    if (this._districtUnits.size === 0) return this.updateState("EMPTY");
+
+    const isContiguous = this.isContiguousDistrict();
+
+    if (!isContiguous) return this.updateState("INVALID");
+    else return this.updateState("INCOMPLETE");
+  }
+
   private add(unit: DistrictUnit) {
     this._districtUnits.set(unit.key, unit);
-    return true;
+  }
+
+  private updateState(newState: District["state"]) {
+    this._state = newState;
+    return this._state;
+  }
+
+  private isContiguousDistrict() {
+    var memoryPad = new Set<string>();
+    this.firstUnit.visitAllNeighbours(memoryPad, this._districtUnits);
+    return memoryPad.size === this._districtUnits.size;
+  }
+
+  private get firstUnit() {
+    return this._districtUnits.values().next().value as DistrictUnit;
+  }
+
+  private get isFull() {
+    return this._districtUnits.size === this.districtSize;
+  }
+
+  private get isEmpty() {
+    return this._districtUnits.size === 0;
   }
 }
 
@@ -118,7 +158,27 @@ class DistrictUnit {
     yield DistrictUnit.makeKey([originRow, originCol - 1]);
   }
 
-  private static makeKey = ([row,col]: Coordinates) => `(${row},${col})`
+  visitAllNeighbours(memoryPad: Set<string>, districtUnits: Map<string, DistrictUnit>) {
+    memoryPad.add(this.key);
+
+    for (const directNeighbour of this.myNeighbours(districtUnits)) {
+      if (!memoryPad.has(directNeighbour.key)) {
+        directNeighbour.visitAllNeighbours(memoryPad, districtUnits);
+      }
+    }
+  }
+
+  private *myNeighbours(
+    districtUnits: Map<string, DistrictUnit>
+  ): IterableIterator<DistrictUnit> {
+    for (const potentialNeighbourKey of this.validNeighbours()) {
+      if (districtUnits.has(potentialNeighbourKey)) {
+        yield districtUnits.get(potentialNeighbourKey);
+      }
+    }
+  }
+
+  private static makeKey = ([row, col]: Coordinates) => `(${row},${col})`;
 }
 
 /**
