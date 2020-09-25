@@ -85,7 +85,20 @@ describe("infrastructure/game", () => {
 
     game.dispatch({ type: "ToggleUnit", coordinates: [1,1] });
     expect(game.currentDistrict.districtBorders).toHaveLength(2);
+  });
 
+  test("remove coords that destroy contiguousness resets the district", () => {
+    const game = newSimpleGame();
+    for (const coordinates of [
+      [0, 0],
+      [1, 0],
+      [1, 1],
+    ] as Coordinates[]) {
+      game.dispatch({ type: "ToggleUnit", coordinates });
+    }
+    expect(game.currentDistrict.districtBorders).toHaveLength(3);
 
+    game.dispatch({ type: "ToggleUnit", coordinates: [1,0] });
+    expect(game.currentDistrict.districtBorders).toHaveLength(0);
   });
 });

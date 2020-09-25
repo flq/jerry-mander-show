@@ -1,5 +1,4 @@
 export type Coordinates = [row: number, column: number];
-type DistrictBorderUnit = { coordinates: Coordinates };
 
 interface Unit {
   tribe: "RED" | "BLUE";
@@ -59,28 +58,38 @@ export class Game {
 }
 
 class District {
-  private _districtBorders: Map<string, DistrictBorderUnit>;
+  private _districtUnits: Map<string, DistrictUnit>;
 
   constructor(private gridSize: number, private districtSize: number) {
-    this._districtBorders = new Map<string, DistrictBorderUnit>();
+    this._districtUnits = new Map<string, DistrictUnit>();
   }
 
-  get districtBorders(): DistrictBorderUnit[] {
-    return Array.from(this._districtBorders.values());
+  get districtBorders(): DistrictUnit[] {
+    return Array.from(this._districtUnits.values());
   }
 
   toggle = (coordinates: Coordinates) => {
-    const key = coordinateToString(coordinates);
-    if (this._districtBorders.has(key)) {
-      this._districtBorders.delete(key);
+    const unit = new DistrictUnit(coordinates);
+
+    if (this._districtUnits.has(unit.key)) {
+      /*
+        1. remove coords
+        2. start visiting all contained units from one place
+        3. all units must still be reachable
+          -> yes: proceed
+          -> no: roll back
+      */
+      // const markedUnit = this._districtUnits.get(key);
+
+      this._districtUnits.delete(unit.key);
       return true;
     } else {
-      if (this._districtBorders.size === 0) {
-        return this.add(key, coordinates);
+      if (this._districtUnits.size === 0) {
+        return this.add(unit);
       }
-      for (const coords of potentialNeighbours(coordinates)) {
-        if (this._districtBorders.has(coordinateToString(coords))) {
-          return this.add(key, coordinates);
+      for (const unitKey of unit.validNeighbours()) {
+        if (this._districtUnits.has(unitKey)) {
+          return this.add(unit);
         }
       }
 
@@ -88,10 +97,28 @@ class District {
     }
   };
 
-  private add(key: string, coordinates: Coordinates) {
-    this._districtBorders.set(key, { coordinates });
+  private add(unit: DistrictUnit) {
+    this._districtUnits.set(unit.key, unit);
     return true;
   }
+}
+
+class DistrictUnit {
+  readonly key: string;
+
+  constructor(public coordinates: Coordinates) {
+    this.key = DistrictUnit.makeKey(coordinates);
+  }
+
+  *validNeighbours(): IterableIterator<string> {
+    const [originRow, originCol] = this.coordinates;
+    yield DistrictUnit.makeKey([originRow + 1, originCol]);
+    yield DistrictUnit.makeKey([originRow - 1, originCol]);
+    yield DistrictUnit.makeKey([originRow, originCol + 1]);
+    yield DistrictUnit.makeKey([originRow, originCol - 1]);
+  }
+
+  private static makeKey = ([row,col]: Coordinates) => `(${row},${col})`
 }
 
 /**
@@ -106,10 +133,6 @@ export function validateInitialDistribution(distribution: string[]) {
   return size;
 }
 
-function coordinateToString(coord: Coordinates) {
-  return `(${coord[0]},${coord[1]})`;
-}
-
 function areNeighbours([refRow, refCol]: Coordinates, [otherRow, otherCol]: Coordinates) {
   if (refCol === otherCol && (refRow - 1 === otherRow || refRow + 1 === otherRow)) {
     return true;
@@ -117,13 +140,4 @@ function areNeighbours([refRow, refCol]: Coordinates, [otherRow, otherCol]: Coor
   if (refRow === otherRow && (refCol - 1 === otherCol || refCol + 1 === otherCol)) {
     return true;
   }
-}
-
-function* potentialNeighbours([originRow, originCol]: Coordinates): IterableIterator<
-  Coordinates
-> {
-  yield [originRow + 1, originCol];
-  yield [originRow - 1, originCol];
-  yield [originRow, originCol + 1];
-  yield [originRow, originCol - 1];
 }
