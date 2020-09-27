@@ -9,6 +9,7 @@ interface Constituent {
 
 type GameAction =
   | { type: "ToggleUnit"; coordinates: Coordinates }
+  | { type: "SwitchDistrict"; index?: number }
   | { type: "Terminator" };
 
 export class Game {
@@ -35,6 +36,7 @@ export class Game {
   private size: number;
   private districts: District[];
   private constituents: Constituent[];
+  private currentDistrictIndex = 0;
 
   private get constituentsCount() {
     return this.size * this.size;
@@ -44,18 +46,42 @@ export class Game {
     return this.constituents;
   }
 
+  get allDistricts() {
+    return this.districts;
+  }
+
   get currentDistrict() {
-    return this.districts[0];
+    return this.districts[this.currentDistrictIndex];
   }
 
   dispatch = (action: GameAction) => {
     switch (action.type) {
       case "ToggleUnit":
         return this.currentDistrict.toggle(action.coordinates);
+      case "SwitchDistrict":
+        if (
+          action.index !== undefined &&
+          action.index >= 0 &&
+          action.index < this.districts.length
+        ) {
+          this.currentDistrictIndex = action.index;
+          return this.currentDistrict.state;
+        } else if (action.index === undefined) {
+          const newIndex =
+            this.currentDistrictIndex === this.districts.length - 1
+              ? 0
+              : this.currentDistrictIndex + 1;
+          this.currentDistrictIndex = newIndex;
+          return this.currentDistrict.state;
+        }
       default:
         return this.currentDistrict.state;
     }
   };
+
+  private *allButCurrentDistrict() {
+    yield this.districts[0];
+  }
 }
 /**
  * validate the distribution - it must be N strings where each string has length N and contain 1s foe the one tribe and any other char for the other

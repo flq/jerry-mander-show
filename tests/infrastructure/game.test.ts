@@ -3,12 +3,14 @@ import { Game, Coordinates, DistrictState, containsSide, Sides } from "infrastru
 const newSimpleGame = () => new Game(["001", "010", "100"], 3);
 
 describe("infrastructure/game", () => {
-  test.each([
-    [["10", "10", "10"], 3],
-    [["100", "100"], 3],
-    [["100", "100", "100"], 4],
-  ])("disallows misconfiguration", (distribution: string[], districtNum: number) => {
-    expect(() => new Game(distribution, districtNum)).toThrowError();
+  describe("Validation", () => {
+    test.each([
+      [["10", "10", "10"], 3],
+      [["100", "100"], 3],
+      [["100", "100", "100"], 4],
+    ])("disallows misconfiguration %#", (distribution: string[], districtNum: number) => {
+      expect(() => new Game(distribution, districtNum)).toThrowError();
+    });
   });
 
   test("correctly initializes the constituents", () => {
@@ -143,13 +145,53 @@ describe("infrastructure/game", () => {
       const borders1 = game.currentDistrict.districtConstituents[0].borders;
       const borders2 = game.currentDistrict.districtConstituents[1].borders;
 
-      expect(containsSide(borders1, Sides.Left | Sides.Top | Sides.Right)).toBeTruthy();
-      expect(containsSide(borders1, Sides.Bottom)).toBeFalsy();
+      expect(containsSide(borders1, Sides.Left | Sides.Top | Sides.Bottom)).toBeTruthy();
+      expect(containsSide(borders1, Sides.Right)).toBeFalsy();
 
-      expect(
-        containsSide(borders2, Sides.Left | Sides.Bottom | Sides.Right)
-      ).toBeTruthy();
+      expect(containsSide(borders2, Sides.Top | Sides.Bottom | Sides.Right)).toBeTruthy();
+      expect(containsSide(borders2, Sides.Left)).toBeFalsy();
+    });
+
+    test("Proper neighbour updates in case of removal", () => {
+      const game = newSimpleGame();
+      game.dispatch({ type: "ToggleUnit", coordinates: [0, 0] });
+      game.dispatch({ type: "ToggleUnit", coordinates: [0, 1] });
+      game.dispatch({ type: "ToggleUnit", coordinates: [1, 1] });
+
+      let borders1 = game.currentDistrict.districtConstituents[0].borders;
+      let borders2 = game.currentDistrict.districtConstituents[2].borders;
+
+      expect(containsSide(borders1, Sides.Right)).toBeFalsy();
       expect(containsSide(borders2, Sides.Top)).toBeFalsy();
+
+      game.dispatch({ type: "ToggleUnit", coordinates: [0, 1] });
+
+      borders1 = game.currentDistrict.districtConstituents[0].borders;
+      borders2 = game.currentDistrict.districtConstituents[1].borders;
+
+      expect(containsSide(borders1, Sides.Right)).toBeTruthy();
+      expect(containsSide(borders2, Sides.Top)).toBeTruthy();
+    });
+  });
+
+  describe("With several districts", () => {
+    test("District switching works", () => {
+      const game = newSimpleGame();
+      expect(game.allDistricts[0]).toBe(game.currentDistrict);
+      game.dispatch({ type: "SwitchDistrict" });
+      expect(game.allDistricts[1]).toBe(game.currentDistrict);
+    });
+
+    test("address cannot be assigned to 2 districts", () => {
+      const game = newSimpleGame();
+      game.dispatch({ type: "ToggleUnit", coordinates: [0, 0] });
+      game.dispatch({ type: "SwitchDistrict" });
+      const state = game.dispatch({ type: "ToggleUnit", coordinates: [0, 0] });
+
+      expect(state).toBe("EMPTY");
+
+      expect(game.allDistricts[0].districtConstituents).toHaveLength(1);
+      expect(game.allDistricts[1].districtConstituents).toHaveLength(0);
     });
   });
 });

@@ -1,5 +1,5 @@
 import { Coordinates } from "./Game";
-import { AssignedConstituent } from "./AssignedConstituent";
+import { AssignedConstituent, coordinatesToString } from "./AssignedConstituent";
 
 export type DistrictState = "EMPTY" | "INCOMPLETE" | "INVALID" | "COMPLETE";
 
@@ -21,12 +21,12 @@ export class District {
   }
 
   toggle = (coordinates: Coordinates) => {
-    const constituent = new AssignedConstituent(coordinates, this._districtConstituents);
+    const constituentAddress = coordinatesToString(coordinates);
 
-    if (this._districtConstituents.has(constituent.key)) {
-      return this.handleRemoval(constituent);
+    if (this._districtConstituents.has(constituentAddress)) {
+      return this.handleRemoval(constituentAddress);
     } else {
-      return this.handleAddition(constituent);
+      return this.handleAddition(new AssignedConstituent(coordinates, this._districtConstituents));
     }
   };
 
@@ -51,9 +51,11 @@ export class District {
       return this.updateState("INCOMPLETE");
   }
 
-  private handleRemoval(constituent: AssignedConstituent) {
-
-    this._districtConstituents.delete(constituent.key);
+  private handleRemoval(constituentKey: string) {
+    
+    const constituent = this._districtConstituents.get(constituentKey);
+    this._districtConstituents.delete(constituentKey);
+    constituent.updateBordersAfterRemoval();
 
     if (this.isEmpty)
       return this.updateState("EMPTY");

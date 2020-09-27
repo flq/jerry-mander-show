@@ -28,7 +28,7 @@ export class AssignedConstituent {
   private _borders : Sides = Sides.None;
 
   constructor(public coordinates: Coordinates, private districtConstituents: Map<string, AssignedConstituent>) {
-    this.key = AssignedConstituent.makeKey(coordinates);
+    this.key = coordinatesToString(coordinates);
   }
 
   get borders() {
@@ -56,6 +56,12 @@ export class AssignedConstituent {
     this._borders = newBorders;
   }
 
+  updateBordersAfterRemoval() {
+    for (const [neighbour, direction] of this.myNeighbours()) {
+      neighbour.addBorder(opposite(direction))
+    }
+  }
+
   private *myNeighbours(): IterableIterator<[neighbour: AssignedConstituent, direction: Sides]> {
     for (const [potentialNeighbourKey, direction] of this.validNeighbours()) {
       if (this.districtConstituents.has(potentialNeighbourKey)) {
@@ -68,13 +74,18 @@ export class AssignedConstituent {
     this._borders &= ~border;
   }
 
-  private *validNeighbours(): IterableIterator<[key: string, direction: Sides]> {
-    const [originRow, originCol] = this.coordinates;
-    yield [AssignedConstituent.makeKey([originRow + 1, originCol]), Sides.Right];
-    yield [AssignedConstituent.makeKey([originRow - 1, originCol]), Sides.Left];
-    yield [AssignedConstituent.makeKey([originRow, originCol + 1]), Sides.Bottom];
-    yield [AssignedConstituent.makeKey([originRow, originCol - 1]), Sides.Top];
+  private addBorder(border: Sides) {
+    this._borders |= border;
   }
 
-  private static makeKey = ([row, col]: Coordinates) => `(${row},${col})`;
+  private *validNeighbours(): IterableIterator<[key: string, direction: Sides]> {
+    const [originRow, originCol] = this.coordinates;
+    yield [coordinatesToString([originRow + 1, originCol]), Sides.Bottom];
+    yield [coordinatesToString([originRow - 1, originCol]), Sides.Top];
+    yield [coordinatesToString([originRow, originCol + 1]), Sides.Right];
+    yield [coordinatesToString([originRow, originCol - 1]), Sides.Left];
+  }
+
 }
+
+export const coordinatesToString = ([row, col]: Coordinates) => `(${row},${col})`;
