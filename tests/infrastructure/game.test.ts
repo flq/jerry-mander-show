@@ -1,4 +1,4 @@
-import { Game, Coordinates, DistrictState } from "infrastructure";
+import { Game, Coordinates, DistrictState, containsSide, Sides } from "infrastructure";
 
 const newSimpleGame = () => new Game(["001", "010", "100"], 3);
 
@@ -11,7 +11,7 @@ describe("infrastructure/game", () => {
     expect(() => new Game(distribution, districtNum)).toThrowError();
   });
 
-  test("correctly initializes the units", () => {
+  test("correctly initializes the constituents", () => {
     const game = newSimpleGame();
     expect(game.allConstituents).toHaveLength(9);
 
@@ -27,94 +27,129 @@ describe("infrastructure/game", () => {
   test("makes a current, empty district available", () => {
     const game = newSimpleGame();
     expect(game.currentDistrict).not.toBeNull();
-    expect(game.currentDistrict.districtUnits).toHaveLength(0);
+    expect(game.currentDistrict.districtConstituents).toHaveLength(0);
   });
 
   test("adds (and removes) coords to belong to empty districts", () => {
     const game = newSimpleGame();
     let check = game.dispatch({ type: "ToggleUnit", coordinates: [0, 0] });
     expect(check).toBeTruthy();
-    expect(game.currentDistrict.districtUnits).toHaveLength(1);
-    expect(game.currentDistrict.districtUnits[0].coordinates).toStrictEqual([0, 0]);
+    expect(game.currentDistrict.districtConstituents).toHaveLength(1);
+    expect(game.currentDistrict.districtConstituents[0].coordinates).toStrictEqual([
+      0,
+      0,
+    ]);
 
     check = game.dispatch({ type: "ToggleUnit", coordinates: [0, 0] });
     expect(check).toBeTruthy();
-    expect(game.currentDistrict.districtUnits).toHaveLength(0);
+    expect(game.currentDistrict.districtConstituents).toHaveLength(0);
   });
 
-  test("adds a valid additional set of coordinates", () => {
-    const game = newSimpleGame();
-    game.dispatch({ type: "ToggleUnit", coordinates: [0, 0] });
-    const check = game.dispatch({ type: "ToggleUnit", coordinates: [0, 1] });
+  describe("addition", () => {
+    test("adds a valid additional set of coordinates", () => {
+      const game = newSimpleGame();
+      game.dispatch({ type: "ToggleUnit", coordinates: [0, 0] });
+      const check = game.dispatch({ type: "ToggleUnit", coordinates: [0, 1] });
 
-    expect(check).toBeTruthy();
-    expect(game.currentDistrict.districtUnits).toHaveLength(2);
+      expect(check).toBeTruthy();
+      expect(game.currentDistrict.districtConstituents).toHaveLength(2);
+    });
+
+    test.each([
+      [[0, 0], "INVALID"],
+      [[0, 1], "INCOMPLETE"],
+      [[0, 2], "INVALID"],
+      [[1, 0], "INCOMPLETE"],
+      [[1, 2], "INCOMPLETE"],
+      [[2, 0], "INVALID"],
+      [[2, 1], "INCOMPLETE"],
+      [[2, 2], "INVALID"],
+    ])(
+      "Is %p close to [1,1] ? %p",
+      (coordinates: Coordinates, expectedState: DistrictState) => {
+        const game = newSimpleGame();
+        game.dispatch({ type: "ToggleUnit", coordinates: [1, 1] });
+        const check = game.dispatch({ type: "ToggleUnit", coordinates });
+
+        expect(check).toBe(expectedState);
+        expect(game.currentDistrict.districtConstituents).toHaveLength(
+          expectedState ? 2 : 1
+        );
+      }
+    );
   });
 
-  test.each([
-    [[0, 0], "INVALID"],
-    [[0, 1], "INCOMPLETE"],
-    [[0, 2], "INVALID"],
-    [[1, 0], "INCOMPLETE"],
-    [[1, 2], "INCOMPLETE"],
-    [[2, 0], "INVALID"],
-    [[2, 1], "INCOMPLETE"],
-    [[2, 2], "INVALID"],
-  ])(
-    "Is %p close to [1,1] ? %p",
-    (coordinates: Coordinates, expectedState: DistrictState) => {
+  describe("Removal", () => {
+    test("remove coords that leave district valid", () => {
+      const game = newSimpleGame();
+      for (const coordinates of [
+        [0, 0],
+        [1, 0],
+        [1, 1],
+      ] as Coordinates[]) {
+        game.dispatch({ type: "ToggleUnit", coordinates });
+      }
+      expect(game.currentDistrict.districtConstituents).toHaveLength(3);
+      expect(game.currentDistrict.state).toBe("COMPLETE");
+
+      game.dispatch({ type: "ToggleUnit", coordinates: [1, 1] });
+      expect(game.currentDistrict.districtConstituents).toHaveLength(2);
+      expect(game.currentDistrict.state).toBe("INCOMPLETE");
+    });
+
+    test("remove coords that destroy contiguousness is reflected in state", () => {
+      const game = newSimpleGame();
+      for (const coordinates of [
+        [0, 0],
+        [1, 0],
+        [1, 1],
+      ] as Coordinates[]) {
+        game.dispatch({ type: "ToggleUnit", coordinates });
+      }
+
+      game.dispatch({ type: "ToggleUnit", coordinates: [1, 0] });
+
+      expect(game.currentDistrict.districtConstituents).toHaveLength(2);
+      expect(game.currentDistrict.state).toBe("INVALID");
+    });
+
+    test("when district goes empty it is reflected in state", () => {
+      const game = newSimpleGame();
+      let state = game.dispatch({ type: "ToggleUnit", coordinates: [0, 0] });
+      expect(game.currentDistrict.state).toBe("INCOMPLETE");
+      state = game.dispatch({ type: "ToggleUnit", coordinates: [1, 1] });
+      expect(game.currentDistrict.state).toBe("INVALID");
+
+      state = game.dispatch({ type: "ToggleUnit", coordinates: [0, 0] });
+      expect(game.currentDistrict.state).toBe("INCOMPLETE");
+      state = game.dispatch({ type: "ToggleUnit", coordinates: [1, 1] });
+      expect(game.currentDistrict.state).toBe("EMPTY");
+    });
+  });
+
+  describe("Borders", () => {
+    test("A single consituent has borders to all directions", () => {
       const game = newSimpleGame();
       game.dispatch({ type: "ToggleUnit", coordinates: [1, 1] });
-      const check = game.dispatch({ type: "ToggleUnit", coordinates });
+      const currentBorders = game.currentDistrict.districtConstituents[0].borders;
+      expect(containsSide(currentBorders, Sides.All)).toBeTruthy();
+    });
 
-      expect(check).toBe(expectedState);
-      expect(game.currentDistrict.districtUnits).toHaveLength(expectedState ? 2 : 1);
-    }
-  );
+    test("Adding a 2nd adapts the borders as necessary", () => {
+      const game = newSimpleGame();
+      game.dispatch({ type: "ToggleUnit", coordinates: [1, 1] });
+      game.dispatch({ type: "ToggleUnit", coordinates: [1, 2] });
 
-  test("remove coords that leave district valid", () => {
-    const game = newSimpleGame();
-    for (const coordinates of [
-      [0, 0],
-      [1, 0],
-      [1, 1],
-    ] as Coordinates[]) {
-      game.dispatch({ type: "ToggleUnit", coordinates });
-    }
-    expect(game.currentDistrict.districtUnits).toHaveLength(3);
-    expect(game.currentDistrict.state).toBe("COMPLETE");
+      const borders1 = game.currentDistrict.districtConstituents[0].borders;
+      const borders2 = game.currentDistrict.districtConstituents[1].borders;
 
-    game.dispatch({ type: "ToggleUnit", coordinates: [1,1] });
-    expect(game.currentDistrict.districtUnits).toHaveLength(2);
-    expect(game.currentDistrict.state).toBe("INCOMPLETE");
+      expect(containsSide(borders1, Sides.Left | Sides.Top | Sides.Right)).toBeTruthy();
+      expect(containsSide(borders1, Sides.Bottom)).toBeFalsy();
+
+      expect(
+        containsSide(borders2, Sides.Left | Sides.Bottom | Sides.Right)
+      ).toBeTruthy();
+      expect(containsSide(borders2, Sides.Top)).toBeFalsy();
+    });
   });
-
-  test("remove coords that destroy contiguousness is reflected in state", () => {
-    const game = newSimpleGame();
-    for (const coordinates of [
-      [0, 0],
-      [1, 0],
-      [1, 1],
-    ] as Coordinates[]) {
-      game.dispatch({ type: "ToggleUnit", coordinates });
-    }
-    
-    game.dispatch({ type: "ToggleUnit", coordinates: [1,0] });
-    
-    expect(game.currentDistrict.districtUnits).toHaveLength(2);
-    expect(game.currentDistrict.state).toBe("INVALID");
-  });
-
-  test("when district goes empty it is reflected in state", () => {
-    const game = newSimpleGame();
-    let state = game.dispatch({ type: "ToggleUnit", coordinates: [0,0] });
-    expect(game.currentDistrict.state).toBe("INCOMPLETE");
-    state = game.dispatch({ type: "ToggleUnit", coordinates: [1,1] });
-    expect(game.currentDistrict.state).toBe("INVALID");
-
-    state = game.dispatch({ type: "ToggleUnit", coordinates: [0,0] });
-    expect(game.currentDistrict.state).toBe("INCOMPLETE");
-    state = game.dispatch({ type: "ToggleUnit", coordinates: [1,1] });
-    expect(game.currentDistrict.state).toBe("EMPTY");
-  })
 });

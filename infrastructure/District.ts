@@ -4,15 +4,16 @@ import { AssignedConstituent } from "./AssignedConstituent";
 export type DistrictState = "EMPTY" | "INCOMPLETE" | "INVALID" | "COMPLETE";
 
 export class District {
-  private readonly _districtUnits: Map<string, AssignedConstituent>;
+
+  private readonly _districtConstituents: Map<string, AssignedConstituent>;
   private _state: DistrictState = "EMPTY";
 
   constructor(private districtSize: number) {
-    this._districtUnits = new Map<string, AssignedConstituent>();
+    this._districtConstituents = new Map<string, AssignedConstituent>();
   }
 
-  get districtUnits(): AssignedConstituent[] {
-    return Array.from(this._districtUnits.values());
+  get districtConstituents(): AssignedConstituent[] {
+    return Array.from(this._districtConstituents.values());
   }
 
   get state(): DistrictState {
@@ -20,25 +21,25 @@ export class District {
   }
 
   toggle = (coordinates: Coordinates) => {
-    const unit = new AssignedConstituent(coordinates, this._districtUnits);
+    const constituent = new AssignedConstituent(coordinates, this._districtConstituents);
 
-    if (this._districtUnits.has(unit.key)) {
-      return this.handleRemoval(unit);
+    if (this._districtConstituents.has(constituent.key)) {
+      return this.handleRemoval(constituent);
     } else {
-      return this.handleAddition(unit);
+      return this.handleAddition(constituent);
     }
   };
 
-  private handleAddition(unit: AssignedConstituent) {
-    if (this._districtUnits.size === 0) {
-      this.add(unit);
+  private handleAddition(constituent: AssignedConstituent) {
+    if (this._districtConstituents.size === 0) {
+      this.add(constituent);
       return this.updateState("INCOMPLETE");
     }
-    if (this._districtUnits.size === this.districtSize) {
+    if (this._districtConstituents.size === this.districtSize) {
       return this.state;
     }
 
-    this.add(unit);
+    this.add(constituent);
 
     const isContiguous = this.isContiguousDistrict();
 
@@ -50,9 +51,9 @@ export class District {
       return this.updateState("INCOMPLETE");
   }
 
-  private handleRemoval(unit: AssignedConstituent) {
+  private handleRemoval(constituent: AssignedConstituent) {
 
-    this._districtUnits.delete(unit.key);
+    this._districtConstituents.delete(constituent.key);
 
     if (this.isEmpty)
       return this.updateState("EMPTY");
@@ -66,7 +67,8 @@ export class District {
   }
 
   private add(unit: AssignedConstituent) {
-    this._districtUnits.set(unit.key, unit);
+    this._districtConstituents.set(unit.key, unit);
+    unit.updateBordersAfterInsertion();
   }
 
   private updateState(newState: District["state"]) {
@@ -77,18 +79,18 @@ export class District {
   private isContiguousDistrict() {
     var memoryPad = new Set<string>();
     this.firstUnit.visitAllNeighbours(memoryPad);
-    return memoryPad.size === this._districtUnits.size;
+    return memoryPad.size === this._districtConstituents.size;
   }
 
   private get firstUnit() {
-    return this._districtUnits.values().next().value as AssignedConstituent;
+    return this._districtConstituents.values().next().value as AssignedConstituent;
   }
 
   private get isFull() {
-    return this._districtUnits.size === this.districtSize;
+    return this._districtConstituents.size === this.districtSize;
   }
 
   private get isEmpty() {
-    return this._districtUnits.size === 0;
+    return this._districtConstituents.size === 0;
   }
 }

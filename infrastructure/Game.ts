@@ -5,7 +5,6 @@ export type Coordinates = [row: number, column: number];
 interface Constituent {
   tribe: "RED" | "BLUE";
   coordinate: Coordinates;
-  district: District | null;
 }
 
 type GameAction =
@@ -25,7 +24,6 @@ export class Game {
       row.split("").map((tribe, colIndex) => ({
         tribe: tribe === "1" ? "BLUE" : "RED",
         coordinate: [rIndex, colIndex],
-        district: null,
       }))
     );
 
