@@ -1,4 +1,4 @@
-import { Game, Coordinates, DistrictState } from "infrastructure/Game";
+import { Game, Coordinates, DistrictState } from "infrastructure";
 
 const newSimpleGame = () => new Game(["001", "010", "100"], 3);
 
@@ -13,13 +13,13 @@ describe("infrastructure/game", () => {
 
   test("correctly initializes the units", () => {
     const game = newSimpleGame();
-    expect(game.allUnits).toHaveLength(9);
+    expect(game.allConstituents).toHaveLength(9);
 
-    const unitIn1stRow = game.allUnits[2];
+    const unitIn1stRow = game.allConstituents[2];
     expect(unitIn1stRow.tribe).toBe("BLUE");
     expect(unitIn1stRow.coordinate).toStrictEqual([0, 2]);
 
-    const lastUnit = game.allUnits[8];
+    const lastUnit = game.allConstituents[8];
     expect(lastUnit.tribe).toBe("RED");
     expect(lastUnit.coordinate).toStrictEqual([2, 2]);
   });
