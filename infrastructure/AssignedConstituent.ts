@@ -1,5 +1,6 @@
 import { Coordinates } from "./Game";
 
+export const coordinatesToString = ([row, col]: Coordinates) => `(${row},${col})`;
 
 export enum Sides {
   None = 0,
@@ -87,5 +88,3 @@ export class AssignedConstituent {
   }
 
 }
-
-export const coordinatesToString = ([row, col]: Coordinates) => `(${row},${col})`;

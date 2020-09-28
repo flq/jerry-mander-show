@@ -1,3 +1,4 @@
+import { coordinatesToString } from "./AssignedConstituent";
 import { District } from "./District";
 
 export type Coordinates = [row: number, column: number];
@@ -57,21 +58,16 @@ export class Game {
   dispatch = (action: GameAction) => {
     switch (action.type) {
       case "ToggleUnit":
-        return this.currentDistrict.toggle(action.coordinates);
+        if (!this.constituentIsInOtherDistrict(action.coordinates)) {
+          return this.currentDistrict.toggle(action.coordinates);
+        }
+        return this.currentDistrict.state;
       case "SwitchDistrict":
-        if (
-          action.index !== undefined &&
-          action.index >= 0 &&
-          action.index < this.districts.length
-        ) {
+        if (this.isDefinedAndValidDistrictIndex(action.index)) {
           this.currentDistrictIndex = action.index;
           return this.currentDistrict.state;
         } else if (action.index === undefined) {
-          const newIndex =
-            this.currentDistrictIndex === this.districts.length - 1
-              ? 0
-              : this.currentDistrictIndex + 1;
-          this.currentDistrictIndex = newIndex;
+          this.stepUpDistrictIndex();
           return this.currentDistrict.state;
         }
       default:
@@ -79,8 +75,30 @@ export class Game {
     }
   };
 
+  private isDefinedAndValidDistrictIndex(index: number | undefined) {
+    return index !== undefined && index >= 0 && index < this.districts.length;
+  }
+
+  private stepUpDistrictIndex() {
+    const newIndex =
+      this.currentDistrictIndex === this.districts.length - 1
+        ? 0
+        : this.currentDistrictIndex + 1;
+    this.currentDistrictIndex = newIndex;
+  }
+
+  private constituentIsInOtherDistrict(coordinates: Coordinates) {
+    const address = coordinatesToString(coordinates);
+    for (const district of this.allButCurrentDistrict()) {
+      if (district.contains(address)) return true;
+    }
+    return false;
+  }
+
   private *allButCurrentDistrict() {
-    yield this.districts[0];
+    for (let idx = 0; idx < this.districts.length; idx++) {
+      if (idx !== this.currentDistrictIndex) yield this.districts[idx];
+    }
   }
 }
 /**

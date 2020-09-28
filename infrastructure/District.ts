@@ -4,7 +4,6 @@ import { AssignedConstituent, coordinatesToString } from "./AssignedConstituent"
 export type DistrictState = "EMPTY" | "INCOMPLETE" | "INVALID" | "COMPLETE";
 
 export class District {
-
   private readonly _districtConstituents: Map<string, AssignedConstituent>;
   private _state: DistrictState = "EMPTY";
 
@@ -26,9 +25,15 @@ export class District {
     if (this._districtConstituents.has(constituentAddress)) {
       return this.handleRemoval(constituentAddress);
     } else {
-      return this.handleAddition(new AssignedConstituent(coordinates, this._districtConstituents));
+      return this.handleAddition(
+        new AssignedConstituent(coordinates, this._districtConstituents)
+      );
     }
   };
+
+  contains(address: string) {
+    return this._districtConstituents.has(address);
+  }
 
   private handleAddition(constituent: AssignedConstituent) {
     if (this._districtConstituents.size === 0) {
@@ -43,29 +48,22 @@ export class District {
 
     const isContiguous = this.isContiguousDistrict();
 
-    if (!isContiguous)
-      return this.updateState("INVALID");
-    else if (this.isFull)
-      return this.updateState("COMPLETE");
-    else
-      return this.updateState("INCOMPLETE");
+    if (!isContiguous) return this.updateState("INVALID");
+    else if (this.isFull) return this.updateState("COMPLETE");
+    else return this.updateState("INCOMPLETE");
   }
 
   private handleRemoval(constituentKey: string) {
-    
     const constituent = this._districtConstituents.get(constituentKey);
     this._districtConstituents.delete(constituentKey);
     constituent.updateBordersAfterRemoval();
 
-    if (this.isEmpty)
-      return this.updateState("EMPTY");
+    if (this.isEmpty) return this.updateState("EMPTY");
 
     const isContiguous = this.isContiguousDistrict();
 
-    if (!isContiguous)
-      return this.updateState("INVALID");
-    else
-      return this.updateState("INCOMPLETE");
+    if (!isContiguous) return this.updateState("INVALID");
+    else return this.updateState("INCOMPLETE");
   }
 
   private add(unit: AssignedConstituent) {
