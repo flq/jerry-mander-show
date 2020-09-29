@@ -13,6 +13,7 @@ export type ToggleOperationResult = {
 
 export interface District {
     state: DistrictState;
+    assignedConstituents: AssignedConstituent[];
 }
 
 export class DistrictImpl implements District {
@@ -23,7 +24,7 @@ export class DistrictImpl implements District {
     this._districtConstituents = new Map<string, AssignedConstituent>();
   }
 
-  get districtConstituents(): AssignedConstituent[] {
+  get assignedConstituents(): AssignedConstituent[] {
     return Array.from(this._districtConstituents.values());
   }
 
