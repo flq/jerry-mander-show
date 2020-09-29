@@ -12,7 +12,8 @@
     "classnames": "^2.2.6",
     "next": "9.5.3",
     "react": "16.13.1",
-    "react-dom": "16.13.1"
+    "react-dom": "16.13.1",
+    "use-error-boundary": "^2.0.4"
   },
   "devDependencies": {
     "@testing-library/dom": "^7.24.2",
