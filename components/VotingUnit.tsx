@@ -11,7 +11,7 @@ export interface VotingUnitProps {
   onClick: (address: Coordinates) => void;
 }
 
-function VotingUnit({ constituent: { tribe, coordinate }, borders, districtState, belongsToCurrentDistrict, onClick }: VotingUnitProps) {
+function VotingUnit({ constituent: { tribe, address: coordinate }, borders, districtState, belongsToCurrentDistrict, onClick }: VotingUnitProps) {
   
   return (
     <button

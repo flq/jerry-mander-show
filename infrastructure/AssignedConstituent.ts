@@ -10,35 +10,30 @@ export enum Sides {
   Right = 1 << 1,
   Bottom = 1 << 2,
   Left = 1 << 3,
-  All = ~(~0 << 4)
+  All = ~(~0 << 4),
 }
 
-export function containsSide(borders: Sides, value: Sides) {
-  return (borders & value) === value;
-}
-
-function opposite(sides: Sides) {
-  switch (sides) {
-    case Sides.Bottom: return Sides.Top;
-    case Sides.Top: return Sides.Bottom;
-    case Sides.Left: return Sides.Right;
-    case Sides.Right: return Sides.Left;
-  }
+export interface Constituent {
+  address: Coordinates;
+  tribe: "RED" | "BLUE";
 }
 
 export class AssignedConstituent {
   readonly key: string;
-  private _borders : Sides = Sides.None;
+  private _borders: Sides = Sides.None;
+  private coordinates: Coordinates;
 
-  constructor(public coordinates: Coordinates, private districtConstituents: Map<string, AssignedConstituent>) {
-    this.key = coordinatesToString(coordinates);
+  constructor(
+    public constituent: Constituent,
+    private districtConstituents: Map<string, AssignedConstituent>
+  ) {
+    this.key = coordinatesToString(constituent.address);
+    this.coordinates = constituent.address;
   }
 
   get borders() {
     return this._borders;
   }
-
-
 
   visitAllNeighbours(memoryPad: Set<string>) {
     memoryPad.add(this.key);
@@ -52,11 +47,11 @@ export class AssignedConstituent {
 
   updateBordersAfterInsertion() {
     let newBorders = Sides.All;
-    const updateBatch : BorderUpdateBatch = []
+    const updateBatch: BorderUpdateBatch = [];
     for (const [neighbour, direction] of this.myNeighbours()) {
       newBorders &= ~direction;
-      neighbour.removeBorder(opposite(direction))
-      updateBatch.push([neighbour.coordinates, neighbour.borders])
+      neighbour.removeBorder(opposite(direction));
+      updateBatch.push([neighbour.coordinates, neighbour.borders]);
     }
     this._borders = newBorders;
     updateBatch.push([this.coordinates, this.borders]);
@@ -64,17 +59,19 @@ export class AssignedConstituent {
   }
 
   updateBordersAfterRemoval() {
-    const updateBatch : BorderUpdateBatch = []
+    const updateBatch: BorderUpdateBatch = [];
     for (const [neighbour, direction] of this.myNeighbours()) {
-      neighbour.addBorder(opposite(direction))
-      updateBatch.push([neighbour.coordinates, neighbour.borders])
+      neighbour.addBorder(opposite(direction));
+      updateBatch.push([neighbour.coordinates, neighbour.borders]);
     }
     this._borders = Sides.None;
     updateBatch.push([this.coordinates, this.borders]);
     return updateBatch;
   }
 
-  private *myNeighbours(): IterableIterator<[neighbour: AssignedConstituent, direction: Sides]> {
+  private *myNeighbours(): IterableIterator<
+    [neighbour: AssignedConstituent, direction: Sides]
+  > {
     for (const [potentialNeighbourKey, direction] of this.validNeighbours()) {
       if (this.districtConstituents.has(potentialNeighbourKey)) {
         yield [this.districtConstituents.get(potentialNeighbourKey), direction];
@@ -97,5 +94,21 @@ export class AssignedConstituent {
     yield [coordinatesToString([originRow, originCol + 1]), Sides.Right];
     yield [coordinatesToString([originRow, originCol - 1]), Sides.Left];
   }
+}
 
+export function containsSide(borders: Sides, value: Sides) {
+  return (borders & value) === value;
+}
+
+function opposite(sides: Sides) {
+  switch (sides) {
+    case Sides.Bottom:
+      return Sides.Top;
+    case Sides.Top:
+      return Sides.Bottom;
+    case Sides.Left:
+      return Sides.Right;
+    case Sides.Right:
+      return Sides.Left;
+  }
 }

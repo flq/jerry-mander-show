@@ -1,24 +1,27 @@
-import { Coordinates } from "./Game";
 import {
   AssignedConstituent,
   BorderUpdateBatch,
+  Constituent,
   coordinatesToString,
 } from "./AssignedConstituent";
 
 export type DistrictState = "EMPTY" | "INCOMPLETE" | "INVALID" | "COMPLETE";
+export type DistrictResult = "NOT_SETTLED" | "RED" | "BLUE" | "DRAW";
 export type ToggleOperationResult = {
   state: DistrictState;
   borderUpdates: BorderUpdateBatch;
 };
 
 export interface District {
-    state: DistrictState;
-    assignedConstituents: AssignedConstituent[];
+  state: DistrictState;
+  result: DistrictResult;
+  assignedConstituents: AssignedConstituent[];
 }
 
 export class DistrictImpl implements District {
   private readonly _districtConstituents: Map<string, AssignedConstituent>;
   private _state: DistrictState = "EMPTY";
+  private _result: DistrictResult = "NOT_SETTLED";
 
   constructor(private districtSize: number) {
     this._districtConstituents = new Map<string, AssignedConstituent>();
@@ -28,18 +31,22 @@ export class DistrictImpl implements District {
     return Array.from(this._districtConstituents.values());
   }
 
+  get result(): DistrictResult {
+    return this._result;
+  }
+
   get state(): DistrictState {
     return this._state;
   }
 
-  toggle = (coordinates: Coordinates): ToggleOperationResult => {
-    const constituentAddress = coordinatesToString(coordinates);
+  toggle = (constituent: Constituent): ToggleOperationResult => {
+    const constituentAddress = coordinatesToString(constituent.address);
 
     if (this._districtConstituents.has(constituentAddress)) {
       return this.handleRemoval(constituentAddress);
     } else {
       return this.handleAddition(
-        new AssignedConstituent(coordinates, this._districtConstituents)
+        new AssignedConstituent(constituent, this._districtConstituents)
       );
     }
   };
@@ -87,6 +94,22 @@ export class DistrictImpl implements District {
   }
 
   private updateState(newState: District["state"]) {
+    if (newState === "COMPLETE") {
+      const { reds, blues } = this.assignedConstituents.reduce(
+        (current, next) => {
+          if (next.constituent.tribe === "RED") {
+            current.reds++;
+          } else {
+            current.blues++;
+          }
+          return current;
+        },
+        { reds: 0, blues: 0 }
+      );
+      this._result = reds > blues ? "RED" : blues > reds ? "BLUE" : "DRAW";
+    } else {
+      this._result = "NOT_SETTLED";
+    }
     this._state = newState;
     return this._state;
   }

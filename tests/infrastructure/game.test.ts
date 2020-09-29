@@ -20,11 +20,11 @@ describe("infrastructure/game", () => {
 
     const unitIn1stRow = constituents[2][1];
     expect(unitIn1stRow.tribe).toBe("BLUE");
-    expect(unitIn1stRow.coordinate).toStrictEqual([0, 2]);
+    expect(unitIn1stRow.address).toStrictEqual([0, 2]);
 
     const lastUnit = constituents[8][1];
     expect(lastUnit.tribe).toBe("RED");
-    expect(lastUnit.coordinate).toStrictEqual([2, 2]);
+    expect(lastUnit.address).toStrictEqual([2, 2]);
   });
 
   test("makes a current, empty district available", () => {
@@ -36,15 +36,14 @@ describe("infrastructure/game", () => {
   test("adds (and removes) coords to belong to empty districts", () => {
     const game = newSimpleGame();
     game.dispatch({ type: "ToggleUnit", coordinates: [0, 0] });
-    
+
     expect(game.currentDistrict.assignedConstituents).toHaveLength(1);
-    expect(game.currentDistrict.assignedConstituents[0].coordinates).toStrictEqual([
-      0,
-      0,
-    ]);
+    expect(
+      game.currentDistrict.assignedConstituents[0].constituent.address
+    ).toStrictEqual([0, 0]);
 
     game.dispatch({ type: "ToggleUnit", coordinates: [0, 0] });
-    
+
     expect(game.currentDistrict.assignedConstituents).toHaveLength(0);
   });
 
@@ -191,5 +190,28 @@ describe("infrastructure/game", () => {
       expect(game.allDistricts[1].state).toBe("EMPTY");
       expect(game.allDistricts[1].assignedConstituents).toHaveLength(0);
     });
+  });
+
+  test("getting results for districts", () => {
+    const game = newSimpleGame();
+    for (const coordinates of [
+      [2, 0],
+      [2, 1],
+      [1, 1],
+    ] as Coordinates[])
+      game.dispatch({ type: "ToggleUnit", coordinates });
+
+    game.dispatch({ type: "SwitchDistrict" });
+
+    for (const coordinates of [
+      [0, 0],
+      [0, 1],
+      [0, 2],
+    ] as Coordinates[])
+      game.dispatch({ type: "ToggleUnit", coordinates });
+
+      expect(game.allDistricts[0].result).toBe("BLUE");
+      expect(game.allDistricts[1].result).toBe("RED");
+      expect(game.allDistricts[2].result).toBe("NOT_SETTLED");
   });
 });

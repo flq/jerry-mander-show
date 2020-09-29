@@ -5,7 +5,7 @@ export type Coordinates = [row: number, column: number];
 
 export interface Constituent {
   tribe: "RED" | "BLUE";
-  coordinate: Coordinates;
+  address: Coordinates;
   borders: Sides;
   district: District | null;
 }
@@ -27,13 +27,13 @@ export class Game {
     this.constituents = new Map<string, Constituent>(
       distribution.flatMap((row, rIndex) =>
         row.split("").map((tribe, colIndex) => {
-          const coordinate = [rIndex, colIndex] as Coordinates;
-          const key = coordinatesToString(coordinate);
+          const address = [rIndex, colIndex] as Coordinates;
+          const key = coordinatesToString(address);
           return [
             key,
             {
               tribe: tribe === "1" ? "BLUE" : "RED",
-              coordinate,
+              address,
               borders: Sides.None,
               district: null
             },
@@ -73,7 +73,8 @@ export class Game {
     switch (action.type) {
       case "ToggleUnit":
         if (!this.constituentIsInOtherDistrict(action.coordinates)) {
-          const { borderUpdates } = this.districts[this.currentDistrictIndex].toggle(action.coordinates);
+          const addressKey = coordinatesToString(action.coordinates);
+          const { borderUpdates } = this.districts[this.currentDistrictIndex].toggle(this.constituents.get(addressKey));
           borderUpdates.forEach(([address, borders]) => {
             const constituent = this.constituents.get(coordinatesToString(address));
             constituent.borders = borders;
