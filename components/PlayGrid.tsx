@@ -1,30 +1,28 @@
-import { CSSProperties, ReactNode, useMemo } from "react";
+import { CSSProperties } from "react";
 import classnames from "classnames";
 import VotingUnit from "./VotingUnit";
-import { validateInitialDistribution } from "infrastructure/Game";
+import { Game } from "infrastructure/Game";
+import { useGame } from "./useGame";
 
-export default function PlayGrid({ distribution, className }: { distribution: string[]; className?: string }) {
-  const [isValid, rows, columns, voteUnits] = useMemo(
-    (() => {
-      const size = validateInitialDistribution(distribution);
-      if (isNaN(size)) return [false];
-      
-      const nodes = distribution.flatMap((row, rIndex) =>
-        row
-          .split("")
-          .map((unit, colIndex) => (
-            <VotingUnit
-              key={`${rIndex}-${colIndex}`}
-              tribe={unit === "1" ? "BLUE" : "RED"}
-            />
-          ))
-      );
-      return [true, size, size, nodes];
-    }) as () => [false] | [true, number, number, ReactNode[]],
-    [distribution]
-  );
+export default function PlayGrid({
+  distribution,
+  districtSize,
+  className,
+}: {
+  distribution: string[];
+  districtSize: number;
+  className?: string;
+}) {
+  const {
+    constituents,
+    districts,
+    currentDistrict,
+    parameters: { rows, columns },
+    commands: { click, selectDistrict },
+  } = useGame(() => new Game(distribution, districtSize));
 
-  return isValid ? (
+  return (
+    <>
     <div
       className={classnames("mx-auto", className)}
       style={
@@ -35,7 +33,16 @@ export default function PlayGrid({ distribution, className }: { distribution: st
         } as CSSProperties
       }
     >
-      {voteUnits}
+      {constituents.map(([key, constituent]) => (
+        <VotingUnit
+          key={key}
+          constituent={constituent}
+          borders={constituent.borders}
+          districtState={constituent.district?.state ?? null}
+          belongsToCurrentDistrict={constituent.district === currentDistrict}
+          onClick={click}
+        />
+      ))}
       <style jsx>
         {`
           div {
@@ -46,7 +53,9 @@ export default function PlayGrid({ distribution, className }: { distribution: st
         `}
       </style>
     </div>
-  ) : (
-    <h3>This distribution is not valid</h3>
+    <ul className="w-auto flex flex-col items-stretch">
+      {districts.map((d,i) => <button className={classnames("m-2", { "font-bold": d === currentDistrict })} onClick={() => selectDistrict(i)}>District {i+1}</button> )}
+      </ul>
+    </>
   );
 }

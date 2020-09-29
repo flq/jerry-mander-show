@@ -2,6 +2,8 @@ import { Coordinates } from "./Game";
 
 export const coordinatesToString = ([row, col]: Coordinates) => `(${row},${col})`;
 
+export type BorderUpdateBatch = [address: Coordinates, borders: Sides][];
+
 export enum Sides {
   None = 0,
   Top = 1 << 0,
@@ -50,17 +52,26 @@ export class AssignedConstituent {
 
   updateBordersAfterInsertion() {
     let newBorders = Sides.All;
+    const updateBatch : BorderUpdateBatch = []
     for (const [neighbour, direction] of this.myNeighbours()) {
       newBorders &= ~direction;
       neighbour.removeBorder(opposite(direction))
+      updateBatch.push([neighbour.coordinates, neighbour.borders])
     }
     this._borders = newBorders;
+    updateBatch.push([this.coordinates, this.borders]);
+    return updateBatch;
   }
 
   updateBordersAfterRemoval() {
+    const updateBatch : BorderUpdateBatch = []
     for (const [neighbour, direction] of this.myNeighbours()) {
       neighbour.addBorder(opposite(direction))
+      updateBatch.push([neighbour.coordinates, neighbour.borders])
     }
+    this._borders = Sides.None;
+    updateBatch.push([this.coordinates, this.borders]);
+    return updateBatch;
   }
 
   private *myNeighbours(): IterableIterator<[neighbour: AssignedConstituent, direction: Sides]> {

@@ -1,11 +1,13 @@
-import { coordinatesToString } from "./AssignedConstituent";
-import { District } from "./District";
+import { coordinatesToString, Sides } from "./AssignedConstituent";
+import { District, DistrictImpl } from "./District";
 
 export type Coordinates = [row: number, column: number];
 
-interface Constituent {
+export interface Constituent {
   tribe: "RED" | "BLUE";
   coordinate: Coordinates;
+  borders: Sides;
+  district: District | null;
 }
 
 type GameAction =
@@ -14,7 +16,7 @@ type GameAction =
   | { type: "Terminator" };
 
 export class Game {
-  constructor(distribution: string[], districtSize: number) {
+  constructor(distribution: string[], public districtSize: number) {
     this.size = validateInitialDistribution(distribution);
     if (isNaN(this.size) || this.constituentsCount % districtSize !== 0) {
       throw Error(
@@ -22,21 +24,33 @@ export class Game {
       );
     }
 
-    this.constituents = distribution.flatMap((row, rIndex) =>
-      row.split("").map((tribe, colIndex) => ({
-        tribe: tribe === "1" ? "BLUE" : "RED",
-        coordinate: [rIndex, colIndex],
-      }))
+    this.constituents = new Map<string, Constituent>(
+      distribution.flatMap((row, rIndex) =>
+        row.split("").map((tribe, colIndex) => {
+          const coordinate = [rIndex, colIndex] as Coordinates;
+          const key = coordinatesToString(coordinate);
+          return [
+            key,
+            {
+              tribe: tribe === "1" ? "BLUE" : "RED",
+              coordinate,
+              borders: Sides.None,
+              district: null
+            },
+          ];
+        })
+      )
     );
 
     this.districts = [...Array(this.constituentsCount / districtSize).keys()].map(
-      () => new District(districtSize)
+      () => new DistrictImpl(districtSize)
     );
   }
 
-  private size: number;
-  private districts: District[];
-  private constituents: Constituent[];
+  size: number;
+  
+  private districts: DistrictImpl[];
+  private constituents: Map<string, Constituent>;
   private currentDistrictIndex = 0;
 
   private get constituentsCount() {
@@ -44,14 +58,14 @@ export class Game {
   }
 
   get allConstituents() {
-    return this.constituents;
+    return this.constituents.entries();
   }
 
-  get allDistricts() {
+  get allDistricts() : District[] {
     return this.districts;
   }
 
-  get currentDistrict() {
+  get currentDistrict() : District {
     return this.districts[this.currentDistrictIndex];
   }
 
@@ -59,19 +73,22 @@ export class Game {
     switch (action.type) {
       case "ToggleUnit":
         if (!this.constituentIsInOtherDistrict(action.coordinates)) {
-          return this.currentDistrict.toggle(action.coordinates);
+          const { borderUpdates } = this.districts[this.currentDistrictIndex].toggle(action.coordinates);
+          borderUpdates.forEach(([address, borders]) => {
+            const constituent = this.constituents.get(coordinatesToString(address));
+            constituent.borders = borders;
+            // No borders can only mean no district - anything else means the op against
+            // the current district resulted in some borders
+            constituent.district = borders === Sides.None ? null : this.currentDistrict;
+          });
         }
-        return this.currentDistrict.state;
+        break;
       case "SwitchDistrict":
         if (this.isDefinedAndValidDistrictIndex(action.index)) {
           this.currentDistrictIndex = action.index;
-          return this.currentDistrict.state;
         } else if (action.index === undefined) {
           this.stepUpDistrictIndex();
-          return this.currentDistrict.state;
         }
-      default:
-        return this.currentDistrict.state;
     }
   };
 

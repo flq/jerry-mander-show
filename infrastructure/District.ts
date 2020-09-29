@@ -1,9 +1,21 @@
 import { Coordinates } from "./Game";
-import { AssignedConstituent, coordinatesToString } from "./AssignedConstituent";
+import {
+  AssignedConstituent,
+  BorderUpdateBatch,
+  coordinatesToString,
+} from "./AssignedConstituent";
 
 export type DistrictState = "EMPTY" | "INCOMPLETE" | "INVALID" | "COMPLETE";
+export type ToggleOperationResult = {
+  state: DistrictState;
+  borderUpdates: BorderUpdateBatch;
+};
 
-export class District {
+export interface District {
+    state: DistrictState;
+}
+
+export class DistrictImpl implements District {
   private readonly _districtConstituents: Map<string, AssignedConstituent>;
   private _state: DistrictState = "EMPTY";
 
@@ -19,7 +31,7 @@ export class District {
     return this._state;
   }
 
-  toggle = (coordinates: Coordinates) => {
+  toggle = (coordinates: Coordinates): ToggleOperationResult => {
     const constituentAddress = coordinatesToString(coordinates);
 
     if (this._districtConstituents.has(constituentAddress)) {
@@ -35,40 +47,42 @@ export class District {
     return this._districtConstituents.has(address);
   }
 
-  private handleAddition(constituent: AssignedConstituent) {
+  private handleAddition(constituent: AssignedConstituent): ToggleOperationResult {
     if (this._districtConstituents.size === 0) {
-      this.add(constituent);
-      return this.updateState("INCOMPLETE");
+      return {
+        state: this.updateState("INCOMPLETE"),
+        borderUpdates: this.add(constituent),
+      };
     }
     if (this._districtConstituents.size === this.districtSize) {
-      return this.state;
+      return { state: this.state, borderUpdates: [] };
     }
 
-    this.add(constituent);
+    const borderUpdates = this.add(constituent);
 
     const isContiguous = this.isContiguousDistrict();
 
-    if (!isContiguous) return this.updateState("INVALID");
-    else if (this.isFull) return this.updateState("COMPLETE");
-    else return this.updateState("INCOMPLETE");
+    if (!isContiguous) return { state: this.updateState("INVALID"), borderUpdates };
+    else if (this.isFull) return { state: this.updateState("COMPLETE"), borderUpdates };
+    else return { state: this.updateState("INCOMPLETE"), borderUpdates };
   }
 
-  private handleRemoval(constituentKey: string) {
+  private handleRemoval(constituentKey: string): ToggleOperationResult {
     const constituent = this._districtConstituents.get(constituentKey);
     this._districtConstituents.delete(constituentKey);
-    constituent.updateBordersAfterRemoval();
+    const borderUpdates = constituent.updateBordersAfterRemoval();
 
-    if (this.isEmpty) return this.updateState("EMPTY");
+    if (this.isEmpty) return { state: this.updateState("EMPTY"), borderUpdates };
 
     const isContiguous = this.isContiguousDistrict();
 
-    if (!isContiguous) return this.updateState("INVALID");
-    else return this.updateState("INCOMPLETE");
+    if (!isContiguous) return { state: this.updateState("INVALID"), borderUpdates };
+    else return { state: this.updateState("INCOMPLETE"), borderUpdates };
   }
 
   private add(unit: AssignedConstituent) {
     this._districtConstituents.set(unit.key, unit);
-    unit.updateBordersAfterInsertion();
+    return unit.updateBordersAfterInsertion();
   }
 
   private updateState(newState: District["state"]) {
