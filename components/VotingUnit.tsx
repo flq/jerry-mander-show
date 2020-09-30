@@ -1,17 +1,18 @@
 import classnames from "classnames";
 import { Constituent, Coordinates, containsSide, Sides } from "infrastructure";
-import { District, DistrictState } from "infrastructure/District";
+import { District, DistrictResult, DistrictState } from "infrastructure/District";
 import { memo } from "react";
 
 export interface VotingUnitProps {
-  constituent: Pick<Constituent, "coordinate" | "tribe">;
+  constituent: Pick<Constituent, "address" | "tribe">;
   borders: Constituent["borders"];
-  districtState: DistrictState;
+  districtState: DistrictState | null;
+  districtResult: DistrictResult | null;
   belongsToCurrentDistrict: boolean;
   onClick: (address: Coordinates) => void;
 }
 
-function VotingUnit({ constituent: { tribe, address: coordinate }, borders, districtState, belongsToCurrentDistrict, onClick }: VotingUnitProps) {
+function VotingUnit({ constituent: { tribe, address }, borders, districtState, districtResult, belongsToCurrentDistrict, onClick }: VotingUnitProps) {
   
   return (
     <button
@@ -22,10 +23,12 @@ function VotingUnit({ constituent: { tribe, address: coordinate }, borders, dist
         "border-0",
         "border-solid",
         {
-          "border-t-2": !belongsToCurrentDistrict && containsSide(borders, Sides.Top),
-          "border-r-2": !belongsToCurrentDistrict && containsSide(borders, Sides.Right),
-          "border-b-2": !belongsToCurrentDistrict && containsSide(borders, Sides.Bottom),
-          "border-l-2": !belongsToCurrentDistrict && containsSide(borders, Sides.Left),
+          "bg-blue-400": districtResult === "BLUE",
+          "bg-red-500": districtResult === "RED",
+          "border-t-1": !belongsToCurrentDistrict && containsSide(borders, Sides.Top),
+          "border-r-1": !belongsToCurrentDistrict && containsSide(borders, Sides.Right),
+          "border-b-1": !belongsToCurrentDistrict && containsSide(borders, Sides.Bottom),
+          "border-l-1": !belongsToCurrentDistrict && containsSide(borders, Sides.Left),
           "border-t-4": belongsToCurrentDistrict && containsSide(borders, Sides.Top),
           "border-r-4": belongsToCurrentDistrict && containsSide(borders, Sides.Right),
           "border-b-4": belongsToCurrentDistrict && containsSide(borders, Sides.Bottom),
@@ -35,7 +38,7 @@ function VotingUnit({ constituent: { tribe, address: coordinate }, borders, dist
           "border-yellow-700": districtState === "INCOMPLETE",
         }
       )}
-      onClick={() => onClick(coordinate)}
+      onClick={() => onClick(address)}
     >
       <div
         className={classnames("outline-none", "flex-grow", {
@@ -51,6 +54,7 @@ export default memo(VotingUnit, (prev, next) => {
   return (
     prev.borders === next.borders &&
     prev.districtState === next.districtState &&
-    prev.belongsToCurrentDistrict === next.belongsToCurrentDistrict
+    prev.belongsToCurrentDistrict === next.belongsToCurrentDistrict &&
+    prev.districtResult === next.districtResult
   );
 });

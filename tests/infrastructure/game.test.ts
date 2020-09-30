@@ -3,15 +3,6 @@ import { Game, Coordinates, DistrictState, containsSide, Sides } from "infrastru
 const newSimpleGame = () => new Game(["001", "010", "100"], 3);
 
 describe("infrastructure/game", () => {
-  describe("Validation", () => {
-    test.each([
-      [["10", "10", "10"], 3],
-      [["100", "100"], 3],
-      [["100", "100", "100"], 4],
-    ])("disallows misconfiguration %#", (distribution: string[], districtNum: number) => {
-      expect(() => new Game(distribution, districtNum)).toThrowError();
-    });
-  });
 
   test("correctly initializes the constituents", () => {
     const game = newSimpleGame();
@@ -45,6 +36,39 @@ describe("infrastructure/game", () => {
     game.dispatch({ type: "ToggleUnit", coordinates: [0, 0] });
 
     expect(game.currentDistrict.assignedConstituents).toHaveLength(0);
+  });
+
+  test("getting results for districts", () => {
+    const game = newSimpleGame();
+    for (const coordinates of [
+      [2, 0],
+      [2, 1],
+      [1, 1],
+    ] as Coordinates[])
+      game.dispatch({ type: "ToggleUnit", coordinates });
+
+    game.dispatch({ type: "SwitchDistrict" });
+
+    for (const coordinates of [
+      [0, 0],
+      [0, 1],
+      [0, 2],
+    ] as Coordinates[])
+      game.dispatch({ type: "ToggleUnit", coordinates });
+
+      expect(game.allDistricts[0].result).toBe("BLUE");
+      expect(game.allDistricts[1].result).toBe("RED");
+      expect(game.allDistricts[2].result).toBe("NOT_SETTLED");
+  });
+
+  describe("Validation", () => {
+    test.each([
+      [["10", "10", "10"], 3],
+      [["100", "100"], 3],
+      [["100", "100", "100"], 4],
+    ])("disallows misconfiguration %#", (distribution: string[], districtNum: number) => {
+      expect(() => new Game(distribution, districtNum)).toThrowError();
+    });
   });
 
   describe("addition", () => {
@@ -190,28 +214,5 @@ describe("infrastructure/game", () => {
       expect(game.allDistricts[1].state).toBe("EMPTY");
       expect(game.allDistricts[1].assignedConstituents).toHaveLength(0);
     });
-  });
-
-  test("getting results for districts", () => {
-    const game = newSimpleGame();
-    for (const coordinates of [
-      [2, 0],
-      [2, 1],
-      [1, 1],
-    ] as Coordinates[])
-      game.dispatch({ type: "ToggleUnit", coordinates });
-
-    game.dispatch({ type: "SwitchDistrict" });
-
-    for (const coordinates of [
-      [0, 0],
-      [0, 1],
-      [0, 2],
-    ] as Coordinates[])
-      game.dispatch({ type: "ToggleUnit", coordinates });
-
-      expect(game.allDistricts[0].result).toBe("BLUE");
-      expect(game.allDistricts[1].result).toBe("RED");
-      expect(game.allDistricts[2].result).toBe("NOT_SETTLED");
   });
 });

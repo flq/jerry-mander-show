@@ -15,7 +15,7 @@ export default function Game() {
     <div className="container mx-auto mt-2 flex justify-center flex-col">
       {map ? (
         <>
-          <header>
+          <header className="m-2">
             <h1 className="text-2xl lg:text-3xl">{map.title}</h1>
             <p className="mt-2">{map.description}</p>
           </header>
@@ -23,7 +23,7 @@ export default function Game() {
             <h2>The game produced an error: {error}</h2>
           ) : (
             <ErrorBoundary>
-              <PlayGrid className="mt-4" distribution={map.distribution} districtSize={map.districtSize} />
+              <PlayGrid distribution={map.distribution} districtSize={map.districtSize} />
             </ErrorBoundary>
           )}
         </>

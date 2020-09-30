@@ -1,8 +1,8 @@
 import { Game, Coordinates } from "infrastructure";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export function useGame(gameFactory: () => Game) {
-  const [game] = useState(gameFactory);
+  const [game, resetGame] = useState(gameFactory);
   const [constituents, setConstituents] = useState(() =>
     Array.from(game.allConstituents)
   );
@@ -25,9 +25,19 @@ export function useGame(gameFactory: () => Game) {
         game.dispatch({ type: "SwitchDistrict", index });
         setCurrentDistrict(game.currentDistrict);
       },
+      resetGame() {
+        resetGame(gameFactory());
+      },
     }),
     [game]
   );
+
+  useEffect(() => {
+    const constituents = Array.from(game.allConstituents);
+    setConstituents(constituents);
+    setCurrentDistrict(game.currentDistrict);
+  }, [game]);
+
   return {
     currentDistrict,
     districts: game.allDistricts,
