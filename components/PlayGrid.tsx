@@ -8,23 +8,40 @@ import { DistrictView } from "./DistrictView";
 export default function PlayGrid({
   distribution,
   districtSize,
+  win,
   className,
 }: {
   distribution: string[];
   districtSize: number;
   className?: string;
+  win: "RED" | "BLUE";
 }) {
   const {
     constituents,
     districts,
     currentDistrict,
+    gameState,
+    round,
     parameters: { rows, columns },
     commands: { click, selectDistrict, resetGame },
   } = useGame(() => new Game(distribution, districtSize));
 
   return (
     <>
-      <ul className="mx-auto flex items-stretch">
+      <h2
+        className={classnames("mx-auto my-4 text-2xl font-bold", {
+          "text-green-500": gameState === win,
+          "text-gray-700": gameState !== win,
+        })}
+      >
+        {gameState !== "RUNNING"
+          ? gameState === win
+            ? "Congratulations, you won!"
+            : "Sorry, it didn't work out, better luck next time."
+          : ""}
+      </h2>
+
+      <ul key={`district-${round}`} className="mx-auto flex items-stretch">
         {districts.map((d, i) => (
           <DistrictView
             key={i}
@@ -36,6 +53,7 @@ export default function PlayGrid({
         ))}
       </ul>
       <div
+        key={`grid-${round}`}
         className={classnames("mx-auto", className)}
         style={
           {
@@ -66,7 +84,9 @@ export default function PlayGrid({
           `}
         </style>
       </div>
-      <button className="mx-auto mt-2 font-bold focus:outline-none" onClick={resetGame}>Reset Game</button>
+      <button className="mx-auto mt-2 font-bold focus:outline-none" onClick={resetGame}>
+        Reset Game
+      </button>
     </>
   );
 }

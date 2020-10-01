@@ -10,6 +10,8 @@ export interface Constituent {
   district: District | null;
 }
 
+export type GameState = "RUNNING" | "RED" | "BLUE" | "DRAW";
+
 type GameAction =
   | { type: "ToggleUnit"; coordinates: Coordinates }
   | { type: "SwitchDistrict"; index?: number }
@@ -24,6 +26,8 @@ export class Game {
       );
     }
 
+    this.state = "RUNNING";
+
     this.constituents = new Map<string, Constituent>(
       distribution.flatMap((row, rIndex) =>
         row.split("").map((tribe, colIndex) => {
@@ -35,7 +39,7 @@ export class Game {
               tribe: tribe === "1" ? "BLUE" : "RED",
               address,
               borders: Sides.None,
-              district: null
+              district: null,
             },
           ];
         })
@@ -48,24 +52,17 @@ export class Game {
   }
 
   size: number;
-  
-  private districts: DistrictImpl[];
-  private constituents: Map<string, Constituent>;
-  private currentDistrictIndex = 0;
-
-  private get constituentsCount() {
-    return this.size * this.size;
-  }
+  state: GameState;
 
   get allConstituents() {
     return this.constituents.entries();
   }
 
-  get allDistricts() : District[] {
+  get allDistricts(): District[] {
     return this.districts;
   }
 
-  get currentDistrict() : District {
+  get currentDistrict(): District {
     return this.districts[this.currentDistrictIndex];
   }
 
@@ -74,7 +71,9 @@ export class Game {
       case "ToggleUnit":
         if (!this.constituentIsInOtherDistrict(action.coordinates)) {
           const addressKey = coordinatesToString(action.coordinates);
-          const { borderUpdates } = this.districts[this.currentDistrictIndex].toggle(this.constituents.get(addressKey));
+          const { borderUpdates } = this.districts[this.currentDistrictIndex].toggle(
+            this.constituents.get(addressKey)
+          );
           borderUpdates.forEach(([address, borders]) => {
             const constituent = this.constituents.get(coordinatesToString(address));
             constituent.borders = borders;
@@ -90,6 +89,23 @@ export class Game {
         } else if (action.index === undefined) {
           this.stepUpDistrictIndex();
         }
+    }
+    
+    if (this.districts.some((d) => d.state !== "COMPLETE")) {
+      this.state === "RUNNING";
+    } else {
+      const result = this.districts.reduce(
+        (result, next) => {
+          result[next.result]++;
+          return result;
+        },
+        {
+          RED: 0,
+          BLUE: 0,
+        }
+      );
+      this.state =
+        result.RED > result.BLUE ? "RED" : result.BLUE > result.RED ? "BLUE" : "DRAW";
     }
   };
 
@@ -117,6 +133,14 @@ export class Game {
     for (let idx = 0; idx < this.districts.length; idx++) {
       if (idx !== this.currentDistrictIndex) yield this.districts[idx];
     }
+  }
+
+  private districts: DistrictImpl[];
+  private constituents: Map<string, Constituent>;
+  private currentDistrictIndex = 0;
+
+  private get constituentsCount() {
+    return this.size * this.size;
   }
 }
 /**

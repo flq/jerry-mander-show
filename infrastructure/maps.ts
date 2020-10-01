@@ -1,6 +1,7 @@
 export const maps = [{
   title: "Example from Blog Post",
-  description: "The Trumpians are having a hard-time here with only 36% of the popular vote. Each district must contain 5 units. Make them win the majority of districts!",
+  description: "The Reds are having a hard-time here with only 36% of the popular vote. Each district must contain 5 units. Make the Reds win the majority of districts!",
+  win: "RED",
   districtSize: 5,
   distribution: [
       "00111",

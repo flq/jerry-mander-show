@@ -4,9 +4,9 @@ export default function QAndA({question, children}: { question: string, children
     return (
         <li className="m-2">
           <p className="text-lg italic font-semibold">{question}</p>
-          <p className="mx-8 my-2">
+          <div className="mx-8 my-2">
             {children}
-          </p>
+          </div>
         </li>
     )
 }

@@ -23,7 +23,7 @@ export default function Game() {
             <h2>The game produced an error: {error}</h2>
           ) : (
             <ErrorBoundary>
-              <PlayGrid distribution={map.distribution} districtSize={map.districtSize} />
+              <PlayGrid distribution={map.distribution} districtSize={map.districtSize} win={map.win} />
             </ErrorBoundary>
           )}
         </>
