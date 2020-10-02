@@ -1,4 +1,5 @@
 import { useRouter } from "next/router";
+import Link from "next/link";
 import PlayGrid from "components/PlayGrid";
 import { maps } from "infrastructure/maps";
 import { useErrorBoundary } from "use-error-boundary";
@@ -16,6 +17,11 @@ export default function Game() {
       {map ? (
         <>
           <header className="m-2">
+            <nav>
+              <Link href="/">
+                <a>Home</a>
+              </Link>
+            </nav>
             <h1 className="text-2xl lg:text-3xl">{map.title}</h1>
             <p className="mt-2">{map.description}</p>
           </header>
@@ -23,7 +29,11 @@ export default function Game() {
             <h2>The game produced an error: {error}</h2>
           ) : (
             <ErrorBoundary>
-              <PlayGrid distribution={map.distribution} districtSize={map.districtSize} win={map.win} />
+              <PlayGrid
+                distribution={map.distribution}
+                districtSize={map.districtSize}
+                win={map.win}
+              />
             </ErrorBoundary>
           )}
         </>

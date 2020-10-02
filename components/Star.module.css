@@ -1,0 +1,24 @@
+@keyframes redblue {
+    0% {
+        @apply text-blue-700;
+    }
+    50% {
+        @apply text-blue-700;
+    }
+    51% {
+        @apply text-red-600;
+    }
+    100% {
+        @apply text-red-600;
+    }
+}
+
+.star {
+    animation-name: redblue;
+    animation-duration: 4s;
+    animation-iteration-count: infinite;
+}
+
+.delay {
+    animation-delay: 2s;
+}
