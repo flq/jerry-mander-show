@@ -1,12 +1,17 @@
 import React from "react";
 import Link from "next/link";
+import Head from "next/head";
 import QAndA from "components/QAndA";
 import Star from "components/Star";
 
 export default function Home() {
   return (
     <div className="container mx-auto mt-2 flex justify-center flex-col">
-      <h1 className="flex flex-col place-items-center text-2xl lg:text-3xl py-2 lg:py-4 border-2 border-orange-600">
+      <Head>
+        <title>The Jerry Mander Show</title>
+        <meta name="viewport" content="initial-scale=1.0, width=device-width" />
+      </Head>
+      <h1 className="mx-2 md:mx-0 flex flex-col place-items-center text-2xl lg:text-3xl py-2 lg:py-4 border-2 border-orange-600">
         <div>
           <Star color="BLUE" />
           <Star color="RED" />
@@ -15,7 +20,7 @@ export default function Home() {
           <Star color="BLUE" />
           <Star color="RED" />
         </div>
-        <span>Welcome to the Jerry Mander Show!</span>
+        <span className="text-center">Welcome to the Jerry Mander Show!</span>
         <div>
           <Star color="BLUE" />
           <Star color="RED" />

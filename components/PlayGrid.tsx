@@ -41,7 +41,10 @@ export default function PlayGrid({
           : ""}
       </h2>
 
-      <ul key={`district-${round}`} className="mx-auto flex items-stretch">
+      <ul
+        key={`district-${round}`}
+        className="mx-auto flex flex-wrap place-content-center items-stretch"
+      >
         {districts.map((d, i) => (
           <DistrictView
             key={i}
@@ -59,7 +62,6 @@ export default function PlayGrid({
           {
             "--rows": rows,
             "--columns": columns,
-            "--size": "128px",
           } as CSSProperties
         }
       >
@@ -80,6 +82,12 @@ export default function PlayGrid({
               display: grid;
               grid-template-columns: repeat(var(--columns), var(--size));
               grid-template-rows: repeat(var(--rows), var(--size));
+              --size: 64px;
+            }
+            @media only screen and (min-width: 600px) {
+              div {
+                --size: 128px;
+              }
             }
           `}
         </style>

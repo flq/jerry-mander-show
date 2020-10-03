@@ -1,8 +1,9 @@
 import { useRouter } from "next/router";
 import Link from "next/link";
+import Head from "next/head";
+import { useErrorBoundary } from "use-error-boundary";
 import PlayGrid from "components/PlayGrid";
 import { maps } from "infrastructure/maps";
-import { useErrorBoundary } from "use-error-boundary";
 
 export default function Game() {
   const {
@@ -14,6 +15,10 @@ export default function Game() {
 
   return (
     <div className="container mx-auto mt-2 flex justify-center flex-col">
+      <Head>
+        <title>Game: {map?.title ?? "..."}</title>
+        <meta name="viewport" content="initial-scale=1.0, width=device-width" />
+      </Head>
       {map ? (
         <>
           <header className="m-2">
