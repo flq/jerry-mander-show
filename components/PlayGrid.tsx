@@ -84,7 +84,7 @@ export default function PlayGrid({
               grid-template-rows: repeat(var(--rows), var(--size));
               --size: 64px;
             }
-            @media only screen and (min-width: 600px) {
+            @media only screen and (min-width: 1024px) {
               div {
                 --size: 128px;
               }

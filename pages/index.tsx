@@ -6,7 +6,7 @@ import Star from "components/Star";
 
 export default function Home() {
   return (
-    <div className="container mx-auto mt-2 flex justify-center flex-col">
+    <div className="container mx-auto mt-2 p-0 lg:p-2 flex justify-center flex-col">
       <Head>
         <title>The Jerry Mander Show</title>
         <meta name="viewport" content="initial-scale=1.0, width=device-width" />
