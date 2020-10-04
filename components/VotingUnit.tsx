@@ -19,7 +19,7 @@ function VotingUnit({ constituent: { tribe, address }, borders, districtState, d
       className={classnames(
         "focus:outline-none",
         "p-2",
-        "flex items-stretch",
+        "flex flex-col items-stretch",
         "border-0",
         "border-solid",
         {
