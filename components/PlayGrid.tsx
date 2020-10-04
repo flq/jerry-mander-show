@@ -14,7 +14,7 @@ export default function PlayGrid({
   distribution: string[];
   districtSize: number;
   className?: string;
-  win: "RED" | "BLUE";
+  win: { tribe: "RED" | "BLUE"; atLeast: number };
 }) {
   const {
     constituents,
@@ -26,16 +26,18 @@ export default function PlayGrid({
     commands: { click, selectDistrict, resetGame },
   } = useGame(() => new Game(distribution, districtSize));
 
+  const isWin = gameState !== "RUNNING" && gameState.win === win.tribe && gameState[win.tribe] >= win.atLeast;
+
   return (
     <>
       <h2
         className={classnames("mx-auto my-4 text-2xl font-bold", {
-          "text-green-500": gameState === win,
-          "text-gray-700": gameState !== win,
+          "text-green-500": isWin,
+          "text-gray-700": !isWin,
         })}
       >
         {gameState !== "RUNNING"
-          ? gameState === win
+          ? isWin
             ? "Congratulations, you won!"
             : "Sorry, it didn't work out, better luck next time."
           : ""}
@@ -82,11 +84,11 @@ export default function PlayGrid({
               display: grid;
               grid-template-columns: repeat(var(--columns), var(--size));
               grid-template-rows: repeat(var(--rows), var(--size));
-              --size: 64px;
+              --size: 50px;
             }
             @media only screen and (min-width: 1024px) {
               div {
-                --size: 128px;
+                --size: 100px;
               }
             }
           `}

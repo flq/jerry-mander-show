@@ -10,7 +10,11 @@ export interface Constituent {
   district: District | null;
 }
 
-export type GameState = "RUNNING" | "RED" | "BLUE" | "DRAW";
+export type GameState = "RUNNING" | {
+  RED: number;
+  BLUE: number;
+  win: "RED" | "BLUE" | "DRAW";
+};
 
 type GameAction =
   | { type: "ToggleUnit"; coordinates: Coordinates }
@@ -102,10 +106,11 @@ export class Game {
         {
           RED: 0,
           BLUE: 0,
+          win: "DRAW" as Extract<GameState, { win }>["win"]
         }
       );
-      this.state =
-        result.RED > result.BLUE ? "RED" : result.BLUE > result.RED ? "BLUE" : "DRAW";
+      result.win = result.RED > result.BLUE ? "RED" : result.BLUE > result.RED ? "BLUE" : "DRAW"
+      this.state = result;
     }
   };
 

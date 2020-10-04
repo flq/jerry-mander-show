@@ -26,6 +26,11 @@ export default function Game() {
               <Link href="/">
                 <a>Home</a>
               </Link>
+              {
+                maps[gameIndex + 1] && <> | <Link href={`/games/${gameIndex + 1}`}>
+                  <a>Next game</a>
+                </Link></>
+              }
             </nav>
             <h1 className="text-2xl lg:text-3xl">{map.title}</h1>
             <p className="mt-2">{map.description}</p>
@@ -33,18 +38,19 @@ export default function Game() {
           {didCatch ? (
             <h2>The game produced an error: {error}</h2>
           ) : (
-            <ErrorBoundary>
-              <PlayGrid
-                distribution={map.distribution}
-                districtSize={map.districtSize}
-                win={map.win}
-              />
-            </ErrorBoundary>
-          )}
+              <ErrorBoundary>
+                <PlayGrid
+                  key={gameIndex}
+                  distribution={map.distribution}
+                  districtSize={map.districtSize}
+                  win={map.win}
+                />
+              </ErrorBoundary>
+            )}
         </>
       ) : (
-        <h2>Unable to retrieve a game with the index {index}</h2>
-      )}
+          <h2>Unable to retrieve a game with the index {index}</h2>
+        )}
     </div>
   );
 }
