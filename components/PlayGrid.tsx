@@ -24,20 +24,18 @@ export default function PlayGrid({
     round,
     parameters: { rows, columns },
     commands: { click, selectDistrict, resetGame },
-  } = useGame(() => new Game(distribution, districtSize));
-
-  const isWin = gameState !== "RUNNING" && gameState.win === win.tribe && gameState[win.tribe] >= win.atLeast;
+  } = useGame(() => new Game(distribution, districtSize, win));
 
   return (
     <>
       <h2
         className={classnames("mx-auto my-4 text-2xl font-bold", {
-          "text-green-500": isWin,
-          "text-gray-700": !isWin,
+          "text-green-500": gameState === "WON",
+          "text-gray-700": gameState === "LOST",
         })}
       >
         {gameState !== "RUNNING"
-          ? isWin
+          ? gameState === "WON"
             ? "Congratulations, you won!"
             : "Sorry, it didn't work out, better luck next time."
           : ""}

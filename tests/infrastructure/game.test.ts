@@ -1,9 +1,9 @@
 import { Game, Coordinates, DistrictState, containsSide, Sides } from "infrastructure";
 
-const newSimpleGame = () => new Game(["001", "010", "100"], 3);
+const newSimpleGame = () =>
+  new Game(["001", "010", "100"], 3, { tribe: "BLUE", atLeast: 1 });
 
 describe("infrastructure/game", () => {
-
   test("correctly initializes the constituents", () => {
     const game = newSimpleGame();
     const constituents = Array.from(game.allConstituents);
@@ -56,9 +56,9 @@ describe("infrastructure/game", () => {
     ] as Coordinates[])
       game.dispatch({ type: "ToggleUnit", coordinates });
 
-      expect(game.allDistricts[0].result).toBe("BLUE");
-      expect(game.allDistricts[1].result).toBe("RED");
-      expect(game.allDistricts[2].result).toBe("NOT_SETTLED");
+    expect(game.allDistricts[0].result).toBe("BLUE");
+    expect(game.allDistricts[1].result).toBe("RED");
+    expect(game.allDistricts[2].result).toBe("NOT_SETTLED");
   });
 
   describe("Validation", () => {
@@ -67,7 +67,9 @@ describe("infrastructure/game", () => {
       [["100", "100"], 3],
       [["100", "100", "100"], 4],
     ])("disallows misconfiguration %#", (distribution: string[], districtNum: number) => {
-      expect(() => new Game(distribution, districtNum)).toThrowError();
+      expect(
+        () => new Game(distribution, districtNum, { tribe: "BLUE", atLeast: 1 })
+      ).toThrowError();
     });
   });
 

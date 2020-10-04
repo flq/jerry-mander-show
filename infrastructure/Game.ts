@@ -10,11 +10,7 @@ export interface Constituent {
   district: District | null;
 }
 
-export type GameState = "RUNNING" | {
-  RED: number;
-  BLUE: number;
-  win: "RED" | "BLUE" | "DRAW";
-};
+export type GameState = "RUNNING" | "WON" | "LOST";
 
 type GameAction =
   | { type: "ToggleUnit"; coordinates: Coordinates }
@@ -22,7 +18,11 @@ type GameAction =
   | { type: "Terminator" };
 
 export class Game {
-  constructor(distribution: string[], public districtSize: number) {
+  constructor(
+    distribution: string[],
+    public districtSize: number,
+    private winCondition: { tribe: "RED" | "BLUE"; atLeast: number }
+  ) {
     this.size = validateInitialDistribution(distribution);
     if (isNaN(this.size) || this.constituentsCount % districtSize !== 0) {
       throw Error(
@@ -94,7 +94,7 @@ export class Game {
           this.stepUpDistrictIndex();
         }
     }
-    
+
     if (this.districts.some((d) => d.state !== "COMPLETE")) {
       this.state === "RUNNING";
     } else {
@@ -106,11 +106,15 @@ export class Game {
         {
           RED: 0,
           BLUE: 0,
-          win: "DRAW" as Extract<GameState, { win }>["win"]
         }
       );
-      result.win = result.RED > result.BLUE ? "RED" : result.BLUE > result.RED ? "BLUE" : "DRAW"
-      this.state = result;
+      const winningTribe =
+        result.RED > result.BLUE ? "RED" : result.BLUE > result.RED ? "BLUE" : "DRAW";
+      this.state =
+        this.winCondition.tribe === winningTribe &&
+        result[this.winCondition.tribe] >= this.winCondition.atLeast
+          ? "WON"
+          : "LOST";
     }
   };
 
