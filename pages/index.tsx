@@ -6,7 +6,7 @@ import Star from "components/Star";
 
 export default function Home() {
   return (
-    <div className="container mx-auto mt-2 p-0 lg:p-2 flex justify-center flex-col">
+    <div className="container mx-auto mt-2 flex justify-center flex-col">
       <Head>
         <title>The Jerry Mander Show</title>
         <meta name="viewport" content="initial-scale=1.0, width=device-width" />
@@ -32,25 +32,42 @@ export default function Home() {
       </h1>
       <ul className="mt-4">
         <QAndA question="What's the Jerry Mander Show?">
-          Gerrymandering is a hugely popular sport in US-politics, played by Democrats and
-          Trumpians alike. If you want to know more, you can have a look at my website,{" "}
-          <a href="https://realfiction.net/2017/01/18/an-outsiders-guide-to-gerrymandering">
-            An outsider's guide to gerrymandering
-          </a>
+          <p>
+            The basic premise of Jerry's democracy is: Everything can be boiled down to{" "}
+            <strong>black/white, yes/no, left/right</strong>. (<em>Yeah, I know...</em>).
+          </p>
+          <p>
+            Hence, your <strong>constituents</strong> are organized in two tribes,{" "}
+            <span className="text-red-700 font-bold">RED</span> or{" "}
+            <span className="text-blue-700 font-bold">BLUE</span>.
+          </p>
+          <p>
+            The constituents are organized into <strong>districts</strong>. If either of
+            the tribe has a majority in the district, the district falls to that tribe (
+            <em>"The winner takes it all 🎶"</em>). It is <strong>up to you</strong> to
+            define the districts such that{" "}
+            <strong>
+              your tribe wins more districts than the opposite tribe, even though it
+              doesn't have the popular vote
+            </strong>{" "}
+            (simply checking to which tribe each constituent belongs).
+          </p>
         </QAndA>
-        <QAndA question="TL;DR; What are the rules?">
+        <QAndA question="What are the rules?">
           <ul className="list-disc">
             <li>
-              Each game shows a grid with n x n units that either belong to red or blue
+              Each game shows an n x n grid full of constituents that are either{" "}
+              <span className="text-red-700 font-bold">RED</span> or{" "}
+              <span className="text-blue-700 font-bold">BLUE</span>.
             </li>
             <li>
               The description tells you who doesn't have the popular vote. Your job is to
-              cut the districts such that you get the mejority of districts anyway.
+              cut the districts such that you get the majority of districts anyway.
             </li>
             <li>Hard rules:</li>
             <ol className="list-decimal ml-4">
-              <li>Districts must be contiguous</li>
-              <li>Each district must have the same amount of units</li>
+              <li>Districts must be contiguous (no jumps, all parts of the district are connected)</li>
+              <li>Each district must have the same amount of constituents</li>
             </ol>
           </ul>
         </QAndA>
